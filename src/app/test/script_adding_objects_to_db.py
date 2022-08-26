@@ -13,21 +13,21 @@ for username, password in TEST_USERS:
     print("Created user {}".format(username))
 
 QUIZ = {"title": "Math small quiz", "questions": [{"question": "What is 1 + 1?", "is_multiple_answers": False,
-                                                   "answers": [{"answer": "1", "correct": False},
-                                                               {"answer": "2", "correct": True},
-                                                               {"answer": "3", "correct": False},]},
-                                                  {"question": "What is 1 + 2?", "is_multiple_answers": False,
-                                                   "answers": [{"answer": "1", "correct": False},
-                                                               {"answer": "2", "correct": False},
-                                                               {"answer": "3", "correct": True},]},
+                                                   "answers": [{"answer": "1", "is_correct": False},
+                                                               {"answer": "2", "is_correct": True},
+                                                               {"answer": "3", "is_correct": False},]},
+                                                  {"question": "What is 1 + 2?",
+                                                   "answers": [{"answer": "1", "is_correct": False},
+                                                               {"answer": "2", "is_correct": False},
+                                                               {"answer": "3", "is_correct": True},]},
                                                   {"question": "x^2 = 4, which values can x be?", "is_multiple_answers": True,
-                                                   "answers": [{"answer": "1", "correct": False},
-                                                               {"answer": "2", "correct": True},
-                                                               {"answer": "-2", "correct": True},]},
+                                                   "answers": [{"answer": "1", "is_correct": False},
+                                                               {"answer": "2", "is_correct": True},
+                                                               {"answer": "-2", "is_correct": True},]},
                                                   {"question": "What is 1 + 1?", "is_multiple_answers": True,
-                                                   "answers": [{"answer": "1", "correct": False},
-                                                               {"answer": "2", "correct": True},
-                                                               {"answer": "3", "correct": False},]}]}
+                                                   "answers": [{"answer": "1", "is_correct": False},
+                                                               {"answer": "2", "is_correct": True},
+                                                               {"answer": "3"},]}]}
 
 
 for user_idx in [0, 1]:
@@ -35,7 +35,7 @@ for user_idx in [0, 1]:
     if existing_quizes:
         print("Deleting {} quizes from {}".format(len(existing_quizes), TEST_USERS[user_idx][0]))
     for q in existing_quizes:
-        requests.delete(LOCAL_URL + "/api/quizes/{}/".format(q["id"]), headers={"Authorization": "Bearer {}".format(tokens[0])})
+        requests.delete(LOCAL_URL + "/api/quizes/{}/".format(q["id"]), headers={"Authorization": "Bearer {}".format(tokens[user_idx])})
     count_quizes = 33 if user_idx == 0 else 4
     print("Creating {} quizes for {}...".format(count_quizes, TEST_USERS[user_idx][0]))
     for i in range(count_quizes):
@@ -45,5 +45,7 @@ for user_idx in [0, 1]:
             q["title"] = "Algebra small quiz " + str(i + 1)
         if i == count_quizes - 1:
             q['is_published'] = True
-        requests.post(LOCAL_URL + "/api/quizes/", json=q,
-                    headers={"Authorization": "Bearer {}".format(tokens[user_idx])})
+        res = requests.post(LOCAL_URL + "/api/quizes/", json=q,
+                            headers={"Authorization": "Bearer {}".format(tokens[user_idx])})
+    assert len(json.loads(requests.get(LOCAL_URL + "/api/quizes/",
+                                       headers={"Authorization": "Bearer {}".format(tokens[user_idx])}).content)["data"]) == count_quizes

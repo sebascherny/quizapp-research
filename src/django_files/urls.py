@@ -18,7 +18,7 @@ from django.urls import path
 from django_files import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView
-from app import views, views_quiz, views_user
+from app import views, views_question, views_quiz, views_user
 from django.views.generic.base import RedirectView
 
 favicon_view = RedirectView.as_view(url='/static/images/favicon.webp', permanent=True)
@@ -31,6 +31,9 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view),
     path('api/quizes/', views_quiz.quizes),
     path('api/quizes/<int:quiz_id>/', views_quiz.quiz),
+    path('api/quizes/<int:quiz_id>/questions/', views_question.questions),
+    path('api/quizes/<int:quiz_id>/questions/<int:question_id>/', views_question.question),
+    path('api/quizes/<int:quiz_id>/questions/<int:question_id>/answers/', views_question.answers),
     path('dashboard/<int:quiz_id>/', views.dashboard_quiz_view),
     path('api/play/<str:quiz_alphanumeric_code>/', views_quiz.play),
     path('api/preview/<str:quiz_alphanumeric_code>/', views_quiz.preview),

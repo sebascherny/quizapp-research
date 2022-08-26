@@ -83,7 +83,7 @@ class QuizesTest(TestCase):
                                )
         self.assertEquals(res.status_code, 400)
         errors = json.loads(res.content)["errors"]
-        self.assertEquals(errors, [{"questions": "Questions must be a list"}])
+        self.assertEquals(errors, [{"questions": "This field must be a list"}])
         
         res = self.client.post('/api/quizes/',
                                data=json.dumps({'title': "Test quiz", "questions": [{"bad": ""}]}),
@@ -150,8 +150,8 @@ class QuizesTest(TestCase):
         res = self.client.post('/api/quizes/',
                                data=json.dumps({'title': "Test quiz", "is_published": True,
                                                 "questions": [{"question": "Is this a question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": True},]}]}),
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": True},]}]}),
                                content_type='application/json',
                                HTTP_AUTHORIZATION=f'Bearer {token}'
                                )
@@ -162,11 +162,11 @@ class QuizesTest(TestCase):
         res = self.client.post('/api/quizes/',
                                data=json.dumps({'title': "Test quiz", "is_published": True,
                                                 "questions": [{"question": "Is this a question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": True},]},
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": True},]},
                                                               {"question": "Is this a second question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": True},]}]}),
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": True},]}]}),
                                content_type='application/json',
                                HTTP_AUTHORIZATION=f'Bearer {token}'
                                )
@@ -180,11 +180,11 @@ class QuizesTest(TestCase):
         res = self.client.post('/api/quizes/',
                                data=json.dumps({'title': "Test quiz", "is_published": True,
                                                 "questions": [{"question": "Is this a question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": False},]},
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": False},]},
                                                               {"question": "Is this a second question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": False},]}]}),
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": False},]}]}),
                                content_type='application/json',
                                HTTP_AUTHORIZATION=f'Bearer {token}'
                                )
@@ -196,11 +196,11 @@ class QuizesTest(TestCase):
         res = self.client.post('/api/quizes/',
                                data=json.dumps({'title': "Test quiz", "is_published": False,
                                                 "questions": [{"question": "Is this a question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": False},]},
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": False},]},
                                                               {"question": "Is this a second question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": False},]}]}),
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": False},]}]}),
                                content_type='application/json',
                                HTTP_AUTHORIZATION=f'Bearer {token}'
                                )
@@ -271,7 +271,7 @@ class QuizesTest(TestCase):
     
         res = self.client.put('/api/quizes/' + quiz_id + "/",
                                data=json.dumps({'is_published': True, 'questions': [{'question': 'Q1',
-                                                                                     'answers': [{'correct': True, 'answer': 'Answer 1'}]}]}),
+                                                                                     'answers': [{'is_correct': True, 'answer': 'Answer 1'}]}]}),
                                content_type='application/json',
                                HTTP_AUTHORIZATION=f'Bearer {token}'
                                )
@@ -293,11 +293,11 @@ class QuizesTest(TestCase):
         res = self.client.post('/api/quizes/',
                                data=json.dumps({'title': "Test quiz", "is_published": False,
                                                 "questions": [{"question": "Is this a question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": False},]},
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": False},]},
                                                               {"question": "Is this a second question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": False},]}]}),
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": False},]}]}),
                                content_type='application/json',
                                HTTP_AUTHORIZATION=f'Bearer {token}'
                                )
@@ -336,11 +336,11 @@ class QuizesTest(TestCase):
         res = self.client.post('/api/quizes/',
                                data=json.dumps({'title': "Test quiz", "is_published": True,
                                                 "questions": [{"question": "Is this a question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": False},]},
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": False},]},
                                                               {"question": "Is this a second question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": False},]}]}),
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": False},]}]}),
                                content_type='application/json',
                                HTTP_AUTHORIZATION=f'Bearer {token}'
                                )
@@ -369,12 +369,12 @@ class QuizesTest(TestCase):
         res = self.client.post('/api/quizes/',
                                data=json.dumps({'title': "Test quiz", "is_published": True,
                                                 "questions": [{"question": "Is this a question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": False},]},
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": False},]},
                                                               {"question": "Is this a second question?",
                                                                "is_multiple_answers": True,
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": True},]}]}),
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": True},]}]}),
                                content_type='application/json',
                                HTTP_AUTHORIZATION=f'Bearer {token}'
                                )
@@ -388,20 +388,20 @@ class QuizesTest(TestCase):
         data = json.loads(quiz_info.content)["data"]
         self.assertEquals(data["title"], "Test quiz")
         self.assertEquals(data["is_published"], True)
-        self.assertEquals(data["questions"], [{"question": "Is this a question?", "answers": [{"answer": "Yes"}, {"answer": "No"}]},
-                                              {"question": "Is this a second question?", "answers": [{"answer": "Yes"}, {"answer": "No"}], "is_multiple_answers": True}])
+        self.assertEquals(data["questions"], [{"id": 1, "is_multiple_answers": False, "question": "Is this a question?", "answers": [{"answer": "Yes"}, {"answer": "No"}]},
+                                              {"id": 2, "question": "Is this a second question?", "answers": [{"answer": "Yes"}, {"answer": "No"}], "is_multiple_answers": True}])
     
     def test_asking_for_unpublished_quiz(self):
         token = self.get_token()
         res = self.client.post('/api/quizes/',
                                data=json.dumps({'title': "Test quiz", "is_published": False,
                                                 "questions": [{"question": "Is this a question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": False},]},
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": False},]},
                                                               {"question": "Is this a second question?",
                                                                "is_multiple_answers": True,
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": True},]}]}),
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": True},]}]}),
                                content_type='application/json',
                                HTTP_AUTHORIZATION=f'Bearer {token}'
                                )
@@ -420,12 +420,12 @@ class QuizesTest(TestCase):
         res = self.client.post('/api/quizes/',
                                data=json.dumps({'title': "Test quiz", "is_published": True,
                                                 "questions": [{"question": "Is this a question?",
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": False},]},
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": False},]},
                                                               {"question": "Is this a second question?",
                                                                "is_multiple_answers": True,
-                                                               "answers": [{"answer": "Yes", "correct": True},
-                                                                           {"answer": "No", "correct": True},]}]}),
+                                                               "answers": [{"answer": "Yes", "is_correct": True},
+                                                                           {"answer": "No", "is_correct": True},]}]}),
                                content_type='application/json',
                                HTTP_AUTHORIZATION=f'Bearer {token}'
                                )

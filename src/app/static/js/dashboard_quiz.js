@@ -9,6 +9,7 @@ function App() {
   const [alphanumericCode, setAlphanumericCode] = React.useState("");
   const [showModal, setShowModal] = React.useState(false);
   const [selectedQuestionIdx, setSelectedQuestionIdx] = React.useState(null);
+  const [selectedQuestionId, setSelectedQuestionId] = React.useState(null);
   const [error, setError] = React.useState("");
   const [question, setQuestion] = React.useState("");
   const [numberOfAnswers, setNumberOfAnswers] = React.useState(0);
@@ -97,16 +98,16 @@ function App() {
     setQuestion(qq.question);
     document.getElementById("question_type").value = qq.is_multiple_answers ? "multiple" : "single";
     setSelectedQuestionIdx(idx);
+    setSelectedQuestionId(qq.id);
     document.getElementById("all_answers").innerHTML = "";
     var currentNextIndex = nextIndex;
     qq.answers.map((ans, ans_idx) => {
       addAnswer(currentNextIndex, false);
       document.getElementById("txt_answer_" + currentNextIndex).value = ans.answer;
-      document.getElementById("switch_is_correct_answer_" + currentNextIndex).checked = ans.correct;
+      document.getElementById("switch_is_correct_answer_" + currentNextIndex).checked = ans.is_correct;
       currentNextIndex += 1;
     });
     setNextIndex(currentNextIndex);
-    setError("");
     for (const x of document.querySelectorAll('[id^="selectQuestionBtn"]')) {
       x.classList.remove("active");
     }
@@ -183,8 +184,8 @@ function App() {
       const ansDiv = answers_divs[i];
       const num = ansDiv.id.substring("div_answers_".length);
       const answer = document.getElementById("txt_answer_" + num).value;
-      const correct = document.getElementById("switch_is_correct_answer_" + num).checked;
-      answers_list.push({ correct, answer });
+      const is_correct = document.getElementById("switch_is_correct_answer_" + num).checked;
+      answers_list.push({ is_correct, answer });
     }
     const questionText = document.getElementById("questionInput").value;
     const is_multiple_answers = document.getElementById("question_type").value === "multiple";
@@ -194,7 +195,7 @@ function App() {
   const getCorrectAnswers = (qObject) => {
     var correctAnswers = 0;
     for (const ans of qObject.answers) {
-      if (ans.correct) {
+      if (ans.is_correct) {
         correctAnswers += 1;
       }
     }
@@ -210,15 +211,12 @@ function App() {
     setError("");
     const currentQuestionObject = getCurrentQuestionObject();
     if (selectedQuestionIdx === null) {
-      var questionsPlusNew = questions;
-      questionsPlusNew.push(currentQuestionObject);
-      put_quiz_api(quizId, { "questions": questionsPlusNew }, () => { getData(loadIndex) }, (errors) => {
+      post_question_api(quizId, currentQuestionObject, () => { getData(loadIndex) }, (errors) => {
         console.log(errors);
       });
     } else {
-      var questionsWithEdition = questions;
-      questionsWithEdition[selectedQuestionIdx] = currentQuestionObject;
-      put_quiz_api(quizId, { "questions": questionsWithEdition }, () => { getData(loadIndex) }, (errors) => {
+      currentQuestionObject["question_id"] = selectedQuestionId;
+      put_question_api(quizId, currentQuestionObject, () => { getData(loadIndex) }, (errors) => {
         console.log(errors);
       });
     }
@@ -241,7 +239,7 @@ function App() {
         questionsWithoutDeleted.push(questions[i]);
       }
     }
-    put_quiz_api(quizId, { "questions": questionsWithoutDeleted }, () => {
+    delete_question_api(quizId, selectedQuestionId, () => {
       Swal.fire({
         title: 'Question deleted',
         text: "",
@@ -271,9 +269,7 @@ function App() {
 
   const newQuestion = () => {
     saveQuestionFromCode(null);
-    var questionsPlusNew = questions;
-    questionsPlusNew.push({ "question": "", "is_multiple_answers": false, "answers": [] });
-    put_quiz_api(quizId, { "questions": questionsPlusNew }, () => { getData(null) }, (errors) => {
+    post_question_api(quizId, { "question": "", "is_multiple_answers": false, "answers": [] }, () => { getData(null) }, (errors) => {
       console.log(errors);
     });
   };
@@ -367,6 +363,8 @@ function App() {
         <div className="form-check form-switch">
           <input className="form-check-input" type="checkbox" role="switch" id="publishedSwitch" checked={isPublished} onChange={() => { changePublishStatus() }} />
           <label className="form-check-label" htmlFor="publishedSwitch">Published</label>
+          <a className="btn btn-light rounded-pill float-end" style={{ marginLeft: "auto" }}
+                      href={window.location.origin + "/preview/" + alphanumericCode} target="_blank">Preview</a>
           <button className="btn btn-default rounded-pill float-end" style={{ marginLeft: "auto" }}
             onClick={(e) => { editTitle() }} disabled={isPublished}>Change title</button>
         </div>

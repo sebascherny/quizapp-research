@@ -10,6 +10,7 @@ function App() {
 
   const quizAlphanumericCode = getQuizAlphanumericCode();
   const isPreview = getIsPreview();
+  document.title = isPreview ? "Preview quiz" : "Play quiz";
 
   const success = (data, loadIndex = 0) => {
     setQuestions(data.data.questions);

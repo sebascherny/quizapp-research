@@ -6,6 +6,8 @@
 python3 manage.py migrate
 ```
 
+- Create a file .env in src/ containing the SECRET_KEY.
+
 - To run the server locally:
 ```
 python3 manage.py runserver
@@ -61,9 +63,9 @@ python3 manage.py runserver
         'is_published': False,
         'questions': [
             {'question': 'What is 1 + 1?', 'is_multiple_answers': False,
-            'answers': [{'answer': '1', 'correct': False}, {'answer': '2', 'correct': True}, {'answer': '3', 'correct': False}]},
+            'answers': [{'answer': '1', 'is_correct': False}, {'answer': '2', 'is_correct': True}, {'answer': '3', 'is_correct': False}]},
             {'question': 'What is 1 + 2?', 'is_multiple_answers': False,
-            'answers': [{'answer': '1', 'correct': False}, {'answer': '2', 'correct': False}, {'answer': '3', 'correct': True}]}
+            'answers': [{'answer': '1', 'is_correct': False}, {'answer': '2', 'is_correct': False}, {'answer': '3', 'is_correct': True}]}
             ]
         }
     ]}
@@ -74,10 +76,10 @@ python3 manage.py runserver
         {'title': 'Algebra small quiz 4',
         'is_published': False,
         'questions': [
-            {'question': 'What is 1 + 1?', 'is_multiple_answers': False,
-            'answers': [{'answer': '1', 'correct': False}, {'answer': '2', 'correct': True}, {'answer': '3', 'correct': False}]},
-            {'question': 'What is 1 + 2?', 'is_multiple_answers': False,
-            'answers': [{'answer': '1', 'correct': False}, {'answer': '2', 'correct': False}, {'answer': '3', 'correct': True}]}
+            {'question': 'What is 1 + 1?', 'is_multiple_answers': False, 'id': 1,
+            'answers': [{'answer': '1', 'is_correct': False}, {'answer': '2', 'is_correct': True}, {'answer': '3', 'is_correct': False}]},
+            {'question': 'What is 1 + 2?', 'is_multiple_answers': False, 'id': 2,
+            'answers': [{'answer': '1', 'is_correct': False}, {'answer': '2', 'is_correct': False}, {'answer': '3', 'is_correct': True}]}
             ]
         }
     ]
@@ -145,6 +147,36 @@ python3 manage.py runserver
     {'data': {'correct': 1}}
     ```
 
+## Questions
+
+- api/quizes/<int:quiz_id>/questions/
+    - POST creates a new question in a specific quiz. Requires user privileges and owning the quiz.. Example body:
+    ```
+    {
+        'question': 'Question text?',
+        'is_multiple_answers': True
+    }
+    ```
+    - GET returns the list of questions. Requires use privileges and owning the quiz. Example json return:
+    ```
+    {
+        'data': [
+            {'question': 'Question text?', 'id': 1, 'is_multiple_answers': True, 'answers': []},
+            {'question': 'Question text?', 'id': 2, 'is_multiple_answers': True, 'answers': []}
+        ]
+    }
+    ```
+
+- api/quizes/<int:quiz_id>/questions/<int:question_id>/
+    - PUT edits the question. Requires user privileges.
+
+    - DELETE deletes question from quiz (and from database). Requires user privileges.
+
+    - GET returns the question. Requires user privileges
+
+- api/quizes/<int:quiz_id>/questions/<int:question_id>/answers/
+    - DELETE delets all existent answers in the given question. Requires user privileges.
+
 ## Preview of unpublished quiz
 
 - api/preview/<str:quiz_alphanumeric_code>/
@@ -156,7 +188,7 @@ To test endpoints, go to src/ and run:
 ```
 python3 manage.py test app/test/
 ```
-You should see 15 tests passing. More tests can be added in this folder.
+You should see 22 tests passing. More tests can be added in this folder.
 
 # WebApp
 

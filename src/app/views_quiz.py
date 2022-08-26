@@ -4,8 +4,10 @@ from django.shortcuts import HttpResponse
 from rest_framework import status
 from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from app.models import Quiz
+from app.models import Answer, Question, Quiz
 import json
+
+from app.views_question import serialize_question
 
 def get_question_errors(question):
     errors = []
@@ -17,7 +19,7 @@ def get_question_errors(question):
     elif len(question.get("answers")) > 5:
         errors.append({"answers": "Questions must have up to 5 answers"})
     else:
-        correct_answers = len([answer for answer in question["answers"] if answer.get("correct")])
+        correct_answers = len([answer for answer in question["answers"] if answer.get("is_correct")])
         if any(not answer.get("answer") for answer in question["answers"]):
             errors.append({"answers": "Answers must be non empty"})
         if correct_answers == 0:
@@ -45,8 +47,8 @@ def check_and_get_errors_before_publishing(questions):
 
 def serialize_quiz(quiz):
     serialized = model_to_dict(quiz)
-    if not serialized["questions"]:
-        serialized["questions"] = []
+    q_objs = Question.objects.filter(quiz=quiz) or []
+    serialized["questions"] = [serialize_question(question) for question in q_objs]
     return serialized
 
 def serialize_quiz_to_play(quiz):
@@ -68,7 +70,7 @@ def get_data_type_errors(questions, is_published):
     if not questions:
         return errs
     if not isinstance(questions, list):
-        errs.append({"questions": "Questions must be a list"})
+        errs.append({"questions": "This field must be a list"})
     else:
         for question in questions:
             if not isinstance(question, dict):
@@ -91,15 +93,15 @@ def get_data_type_errors(questions, is_published):
                 if not isinstance(answer, dict):
                     errs.append({"answers": "Answers should be a list of dictionaries"})
                     break
-                forbidden_keys = [k for k in answer if k not in ("answer", "correct")]
+                forbidden_keys = [k for k in answer if k not in ("answer", "is_correct")]
                 if forbidden_keys:
                     errs.append({"answers": "The following keys should not be given in answer: {}".format(forbidden_keys)})
                     break
                 if "answer" in answer and not isinstance(answer["answer"], str):
                     errs.append({"answers": "The answers should be text"})
                     break
-                if 'correct' in question and not isinstance(answer['correct'], bool):
-                    errs.append({"answers": "Field 'correct' should be boolean"})
+                if 'is_correct' in answer and not isinstance(answer['is_correct'], bool):
+                    errs.append({"answers": "Field 'is_correct' should be boolean"})
                     break
     return errs
 
@@ -107,27 +109,32 @@ def save_quiz(request, quiz, success_status):
     errors = []
     questions = request.data.get("questions")
     title = request.data.get("title", None)
-    is_published = request.data.get("is_published") or False
+    is_published = request.data.get("is_published")
     
+    if quiz.id:
+        if is_published is None:
+            is_published = quiz.is_published
     if quiz.id and quiz.is_published:
         # Allowing published quiz to be unpublished
-        if is_published or title or questions:
-            errors = [{"published_quiz": "First unpublish the quiz and then you will be able to edit it"}]
-    
+        if is_published:
+            if title or questions:
+                errors = [{"published_quiz": "First unpublish the quiz and then you will be able to edit it"}]
     if not errors:
         if quiz.id:
             if title is None:
                 title = quiz.title
-            if questions is None:
-                questions = quiz.questions
             if is_published is None:
                 is_published = quiz.is_published
-        if len(title) == 0:
+        if is_published is None:
+            is_published = False
+        if title is not None and not title:
             errors.append({"title": "This field is required"})
+        if not isinstance(title, str):
+            errors.append({"title": "This field must be string"})
         errors.extend(get_data_type_errors(questions, is_published))
         if is_published and not errors:
-            errors.extend(check_and_get_errors_before_publishing(questions))
-
+            questions_to_check = questions or [serialize_question(q_obj) for q_obj in Question.objects.filter(quiz=quiz)]
+            errors.extend(check_and_get_errors_before_publishing(questions_to_check))
     if len(errors) > 0:
         return HttpResponse(json.dumps(
             {
@@ -137,10 +144,19 @@ def save_quiz(request, quiz, success_status):
     try:
         quiz.alphanumeric_code = quiz.alphanumeric_code or _get_unique_randomized_alphanumeric_code()
         quiz.title = title
-        quiz.questions = questions or []
         quiz.user = request.user
         quiz.is_published = is_published
         quiz.save()
+        if questions == []:
+            for q_obj in Question.objects.filter(quiz=quiz):
+                q_obj.delete()
+        for question in questions or []:
+            question_obj = Question(question=question.get("question", ""), quiz=quiz,
+                                    is_multiple_answers=question.get("is_multiple_answers", False))
+            question_obj.save()
+            for answer in question["answers"]:
+                answer_obj = Answer(answer=answer["answer"], is_correct=answer.get("is_correct", False), question=question_obj)
+                answer_obj.save()
     except Exception as e:
         return HttpResponse(json.dumps(
             {
@@ -203,12 +219,14 @@ def quiz(request, quiz_id):
 
 def check_answers(request, quiz):
     answers = request.data.get("answers")
-    if (answers is None) or (not isinstance(answers, list)) or len(answers) != len(quiz.questions):
+    quiz_questions = Question.objects.filter(quiz=quiz)
+    if (answers is None) or (not isinstance(answers, list)) or len(answers) != len(quiz_questions):
         return {"success": False, "data": {"message": "You should send a list of answers, one per question"}}
     result = 0
     for i in range(len(answers)):
         given_answer = answers[i]
-        should_be_answer = [j for j, option in enumerate(quiz.questions[i]["answers"]) if option["correct"]]
+        question_answers = Answer.objects.filter(question_id=quiz_questions[i].id)
+        should_be_answer = [j for j, option in enumerate(question_answers) if option.is_correct]
         if sorted(given_answer) == should_be_answer:
             result += 1
     return {"success": True, "data": {"correct": result}}
