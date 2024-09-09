@@ -1,16 +1,22 @@
 # API
 
 ## Installation and running
-- If db.sqlite3 file exists, to start database from scratch, just remove it and run from src/:
+First run:
+
+`python -m venv env`
+`source env/bin/activate`
+`pip install -r requirements.txt`
+
+- If db.sqlite3 file exists, to start database from scratch, just remove it and run:
 ```
-python3 manage.py migrate
+python src/manage.py migrate
 ```
 
-- Create a file .env in src/ containing the SECRET_KEY.
+export SECRET_KEY=...
 
 - To run the server locally:
 ```
-python3 manage.py runserver
+python src/manage.py runserver
 ```
 
 ## Endpoints
